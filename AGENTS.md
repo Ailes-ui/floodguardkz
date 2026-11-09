@@ -28,3 +28,5 @@ use the editor.
   own key and store it in Secrets.
 - **Secrets.** Lovable manages them. Do not put secret values in the repo.
 <!-- LOVABLE:END -->
+
+- FloodGuard UI reads all data through the `FloodDataSource` interface in src/lib/floodguard/data.ts; swap `data` for ESP32/ML-backed sources so pages need no changes.
