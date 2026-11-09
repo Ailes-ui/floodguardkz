@@ -17,7 +17,7 @@ const river = "M0,18 C15,20 20,30 30,38 S45,48 55,52 S70,60 78,66 S92,80 100,86"
 
 function MapPage() {
   const stations = data.stations();
-  const [sel, setSel] = useState(stations[2]);
+  const [sel, setSel] = useState(stations[2]!);
   return (
     <>
       <PageHeader title="Monitoring map" subtitle="Schematic basin view — station positions are illustrative" />

@@ -41,12 +41,12 @@ const hourly: Reading[] = Array.from({ length: 24 * 30 }, (_, k) => {
 export const demoSource: FloodDataSource = {
   isDemo: true,
   current() {
-    const last = hourly[hourly.length - 1], prev = hourly[hourly.length - 7];
+    const last = hourly[hourly.length - 1]!, prev = hourly[hourly.length - 7]!;
     return { level: last.level, trend: +((last.level - prev.level) / 6 * 100).toFixed(1), temp: last.temp, weather: "Light rain", humidity: 86, rain24h: +hourly.slice(-24).reduce((a, r) => a + r.rain, 0).toFixed(1), risk: riskFor(last.level), updated: last.time };
   },
   history(days) { return hourly.slice(-24 * days); },
   forecast() {
-    const last = hourly[hourly.length - 1].level;
+    const last = hourly[hourly.length - 1]!.level;
     const points = Array.from({ length: 49 }, (_, h) => {
       const p = last + 0.9 * (1 - Math.exp(-h / 14)) - (h > 30 ? (h - 30) * 0.012 : 0);
       const u = 0.05 + h * 0.006;
