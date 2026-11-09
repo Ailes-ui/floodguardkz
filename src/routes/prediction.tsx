@@ -16,7 +16,7 @@ export const Route = createFileRoute("/prediction")({
 
 function Prediction() {
   const f = data.forecast();
-  const pts = f.points.map((p) => ({ ...p, t: `+${Math.round((new Date(p.time).getTime() - new Date(f.points[0].time).getTime()) / 3600000)}h`, band: [p.low, p.high] }));
+  const pts = f.points.map((p) => ({ ...p, t: `+${Math.round((new Date(p.time).getTime() - new Date(f.points[0]!.time).getTime()) / 3600000)}h`, band: [p.low, p.high] }));
   const peakAt = f.points.find((p) => p.predicted === f.peak)!;
   return (
     <>

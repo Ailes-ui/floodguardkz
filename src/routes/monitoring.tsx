@@ -20,8 +20,8 @@ function Monitoring() {
   const daily = Array.from({ length: days }, (_, d) => {
     const s = hist.slice(d * 24, d * 24 + 24);
     const lv = s.map((r) => r.level);
-    return { date: s[0].time.slice(5, 10), avg: +(lv.reduce((a, b) => a + b, 0) / lv.length).toFixed(2), min: Math.min(...lv), max: Math.max(...lv), rain: +s.reduce((a, r) => a + r.rain, 0).toFixed(1), temp: +(s.reduce((a, r) => a + r.temp, 0) / s.length).toFixed(1) };
-  }).map((d, i, arr) => ({ ...d, change: i ? +((d.avg - arr[i - 1].avg) * 100).toFixed(0) : 0 }));
+    return { date: s[0]!.time.slice(5, 10), avg: +(lv.reduce((a, b) => a + b, 0) / lv.length).toFixed(2), min: Math.min(...lv), max: Math.max(...lv), rain: +s.reduce((a, r) => a + r.rain, 0).toFixed(1), temp: +(s.reduce((a, r) => a + r.temp, 0) / s.length).toFixed(1) };
+  }).map((d, i, arr) => ({ ...d, change: i ? +((d.avg - arr[i - 1]!.avg) * 100).toFixed(0) : 0 }));
   const series = hist.filter((_, i) => i % 3 === 0).map((r) => ({ t: r.time.slice(5, 10), level: r.level }));
 
   return (
