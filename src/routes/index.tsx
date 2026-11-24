@@ -47,6 +47,7 @@ function Page() {
   const choose = (next: ScenarioId) => { setId(next); setAcked(false); setToast(next !== "normal"); };
 
   return (
+    <p style="font-family: Geneva, Helvetica, sans-serif;">
     <div className="min-h-screen">
       <header className="sticky top-0 z-[1000] border-b border-border bg-background/90 backdrop-blur">
         <div className="mx-auto flex max-w-7xl flex-wrap items-center gap-3 px-4 py-3">
@@ -82,8 +83,8 @@ function Page() {
       <main className="mx-auto max-w-7xl space-y-6 px-4 py-6">
         <section className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
           <div>
-            <h1 className="text-2xl font-bold md:text-3xl">пос. Габидена Мустафина · река Нура</h1>
-            <p className="text-sm text-muted-foreground">Бухар-Жырауский район, Карагандинская область · пилотная территория</p>
+            <h1 className="text-2xl font-bold md:text-3xl">Локация: пос. Габидена Мустафина, река Нура</h1>
+            <p className="text-sm text-muted-foreground">Бухар-Жырауский район, Карагандинская область </p>
           </div>
           <div className="flex flex-wrap gap-2">
             {(["normal", "rise", "critical"] as const).map((sid) => {
@@ -266,5 +267,6 @@ function Roadmap() {
         {steps.map((st, i) => <li key={st} className="flex gap-3 rounded-lg border border-border bg-secondary p-4 text-sm"><span className="grid size-7 shrink-0 place-items-center rounded-full bg-primary font-mono text-xs font-semibold text-primary-foreground">{i + 1}</span>{st}</li>)}
       </ol>
     </section>
+    </p>
   );
 }
