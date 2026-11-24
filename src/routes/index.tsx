@@ -33,8 +33,8 @@ function Page() {
   const [acked, setAcked] = useState(false);
   const [toast, setToast] = useState(false);
   const [eventOpen, setEventOpen] = useState(false);
-  const [light, setLight] = useState(false);
-  useEffect(() => { document.documentElement.classList.toggle("light", light); }, [light]);
+  const [light, setLight] = useState(true);
+  useEffect(() => { document.documentElement.classList.toggle("dark", !light); }, [light]);
 
   const s = data.scenario(id);
   const series = data.series(id);
@@ -42,20 +42,21 @@ function Page() {
   const baseLog = data.log(id);
   const t = tone[s.risk];
   const needsAck = id !== "normal";
-  const log = acked && needsAck ? [...baseLog.slice(0, -1), { time: baseLog.at(-1)!.time, text: ACK_TEXT }] : baseLog;
+  const lastEvent = baseLog.at(-1);
+  const log = acked && needsAck && lastEvent ? [...baseLog.slice(0, -1), { time: lastEvent.time, text: ACK_TEXT }] : baseLog;
 
   const choose = (next: ScenarioId) => { setId(next); setAcked(false); setToast(next !== "normal"); };
 
   return (
-    <div className="min-h-screen font-[Geneva,Helvetica,sans-serif]">
+    <div className="flood-dashboard min-h-screen font-sans">
       <header className="sticky top-0 z-[1000] border-b border-border bg-background/90 backdrop-blur">
-        <div className="mx-auto flex max-w-7xl flex-wrap items-center gap-3 px-4 py-3">
+        <div className="mx-auto flex max-w-7xl flex-wrap items-center gap-3 px-4 py-4 sm:px-6">
           <div className="flex items-center gap-2.5">
-            <span className="grid size-9 place-items-center rounded-lg bg-primary text-primary-foreground"><Droplets className="size-5" /></span>
+            <span className="grid size-10 place-items-center rounded-lg bg-primary text-primary-foreground shadow-glow"><Droplets className="size-6" /></span>
             <div><p className="font-display text-lg font-bold leading-none">FloodGuard</p><p className="text-xs text-muted-foreground">Локальный мониторинг паводкового риска</p></div>
           </div>
           <div className="ml-auto flex items-center gap-4 text-xs text-muted-foreground">
-            <span className="flex items-center gap-1.5"><span className="size-2 animate-pulse rounded-full bg-safe" />Система активна</span>
+            <span className="flex items-center gap-1.5 text-safe"><span className="size-2 motion-safe:animate-pulse rounded-full bg-safe" />ДЕМО</span>
             <span className="hidden items-center gap-1.5 sm:flex"><Clock className="size-3.5" />Обновлено: {UPDATED}</span>
             <Button variant="ghost" size="icon" aria-label="Сменить тему" onClick={() => setLight((v) => !v)}>{light ? <Moon className="size-4" /> : <Sun className="size-4" />}</Button>
           </div>
@@ -66,7 +67,7 @@ function Page() {
       </header>
 
       {toast && (
-        <div className="fixed right-4 top-44 z-[1100] w-80 animate-in slide-in-from-right fade-in rounded-xl border border-border bg-popover p-4 shadow-2xl">
+        <div className="fixed right-4 top-44 z-[1100] w-80 max-w-[calc(100vw-2rem)] animate-in slide-in-from-right fade-in rounded-lg border border-border bg-popover p-4 shadow-2xl">
           <div className="flex gap-3">
             <BellRing className={cn("size-5 shrink-0", t.text)} />
             <div className="flex-1 text-sm">
@@ -74,23 +75,32 @@ function Page() {
               <p className="mt-1 text-muted-foreground">FloodGuard обнаружил быстрое изменение уровня воды. Проверьте участок.</p>
               {id === "critical" && <Button size="sm" variant="destructive" className="mt-3" onClick={() => setEventOpen(true)}>Открыть карточку события</Button>}
             </div>
-            <button aria-label="Закрыть" onClick={() => setToast(false)} className="text-muted-foreground hover:text-foreground"><X className="size-4" /></button>
+            <Button variant="ghost" size="icon" aria-label="Закрыть" onClick={() => setToast(false)} className="size-6 shrink-0 text-muted-foreground"><X className="size-4" /></Button>
           </div>
         </div>
       )}
 
-      <main className="mx-auto max-w-7xl space-y-6 px-4 py-6">
-        <section className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
-          <div>
-            <h1 className="text-2xl font-bold md:text-3xl">Локация: пос. Габидена Мустафина, река Нура</h1>
-            <p className="text-sm text-muted-foreground">Бухар-Жырауский район, Карагандинская область </p>
+      <main className="mx-auto max-w-7xl space-y-6 px-4 py-8 sm:px-6">
+        <section className="flex flex-col items-center gap-5 pb-2 pt-3 text-center sm:pt-6">
+          <div className="inline-flex items-center gap-2 rounded-full border border-primary/15 bg-primary/10 px-4 py-1.5 text-xs font-medium text-primary"><Activity className="size-3.5" />Локальный мониторинг паводкового риска</div>
+          <div className="max-w-3xl">
+            <h1 className="font-display text-5xl font-bold text-primary sm:text-6xl">FloodGuard</h1>
+            <p className="mt-4 text-lg font-semibold sm:text-2xl">пос. Габидена Мустафина · река Нура</p>
+            <p className="mt-2 text-sm text-muted-foreground">Бухар-Жырауский район, Карагандинская область</p>
           </div>
-          <div className="flex flex-wrap gap-2">
+          <div className="flex flex-wrap justify-center gap-2">
             {(["normal", "rise", "critical"] as const).map((sid) => {
               const sc = data.scenario(sid); const active = sid === id;
-              return <button key={sid} onClick={() => choose(sid)} className={cn("rounded-lg border px-4 py-2 text-sm font-medium transition-all", active ? cn(tone[sc.risk].bg, tone[sc.risk].border, tone[sc.risk].text) : "border-border bg-card text-muted-foreground hover:text-foreground")}>{sc.button}</button>;
+              return <Button key={sid} variant="outline" aria-pressed={active} onClick={() => choose(sid)} className={cn("rounded-lg px-4 text-sm transition-colors", active ? cn(tone[sc.risk].bg, tone[sc.risk].border, tone[sc.risk].text) : "border-border bg-card text-muted-foreground")}>{sc.button}</Button>;
             })}
           </div>
+        </section>
+
+        <section className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+          <Metric icon={Droplets} label="Уровень воды" value={`${s.level} см`} accent="text-primary" />
+          <Metric icon={TrendingUp} label="Изменение за час" value={`+${s.delta} см`} accent={t.text} />
+          <Metric icon={Thermometer} label="Температура воздуха" value="+4 °C" accent="text-caution" />
+          <Metric icon={Radio} label="Активные точки" value={`${points.filter((p) => p.online).length} из ${points.length}`} accent="text-safe" />
         </section>
 
         <section className="grid gap-6 lg:grid-cols-[1.5fr_1fr]">
@@ -111,11 +121,7 @@ function Page() {
               <p className="mt-0.5 text-sm font-medium">{s.action}</p>
             </div>
             <div className="grid grid-cols-2 gap-3">
-              <Metric icon={Droplets} label="Уровень воды" value={`${s.level} см`} accent={t.text} />
-              <Metric icon={TrendingUp} label="Изменение за час" value={`+${s.delta} см`} accent={t.text} />
               <Metric icon={Gauge} label="Скорость роста" value={s.speed} />
-              <Metric icon={Thermometer} label="Температура воздуха" value="+4 °C" />
-              <Metric icon={Radio} label="Активные точки" value={`${points.filter((p) => p.online).length} из ${points.length}`} />
               <Metric icon={Clock} label="Последнее обновление" value={UPDATED} />
             </div>
             <p className="text-xs italic text-muted-foreground">Значения используются только для демонстрации интерфейса и не являются официальными гидрологическими данными.</p>
@@ -173,7 +179,7 @@ function Page() {
           <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-2 text-sm">
             {([
               ["Время обнаружения", "20:14"],
-              ["Точка наблюдения", points[0]!.name],
+              ["Точка наблюдения", points[0]?.name ?? "—"],
               ["Уровень воды", `${s.level} см`],
               ["Изменение за час", `+${s.delta} см`],
               ["Статус", s.status],
@@ -191,9 +197,10 @@ function Page() {
 
 function Metric({ icon: Icon, label, value, accent }: { icon: typeof Droplets; label: string; value: string; accent?: string }) {
   return (
-    <div className="rounded-xl border border-border bg-card p-3.5">
-      <div className="flex items-center gap-1.5 text-xs text-muted-foreground"><Icon className="size-3.5" />{label}</div>
-      <p className={cn("mt-1.5 font-display text-xl font-semibold transition-colors duration-500", accent)}>{value}</p>
+    <div className="metric-tile min-w-0 rounded-lg border border-border bg-card p-4 sm:p-5">
+      <span className={cn("mb-3 grid size-9 place-items-center rounded-lg bg-secondary", accent ?? "text-primary")}><Icon className="size-4" /></span>
+      <p className={cn("break-words font-display text-2xl font-bold transition-colors duration-500", accent)}>{value}</p>
+      <p className="mt-1.5 text-xs text-muted-foreground">{label}</p>
     </div>
   );
 }
