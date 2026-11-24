@@ -48,6 +48,7 @@ function Page() {
   const choose = (next: ScenarioId) => { setId(next); setAcked(false); setToast(next !== "normal"); };
 
   return (
+    <div className="min-h-screen font-[Geneva,Helvetica,sans-serif]">
     <div className="flood-dashboard min-h-screen font-sans">
       <header className="sticky top-0 z-[1000] border-b border-border bg-background/90 backdrop-blur">
         <div className="mx-auto flex max-w-7xl flex-wrap items-center gap-3 px-4 py-4 sm:px-6">
