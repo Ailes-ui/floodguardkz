@@ -30,3 +30,5 @@ use the editor.
 <!-- LOVABLE:END -->
 
 - FloodGuard UI reads all data through the `FloodDataSource` interface in src/lib/floodguard/data.ts; swap `data` for ESP32/ML-backed sources so pages need no changes.
+- FloodGuard is a single-page Russian demo at `/`; scenario data lives in src/lib/floodguard/data.ts behind `FloodDataSource` so real sensors can replace it without UI changes.
+- Leaflet map is lazy-loaded behind `<ClientOnly>` because Leaflet touches `window` during import (breaks SSR).

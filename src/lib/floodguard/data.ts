@@ -1,90 +1,93 @@
 /**
- * FloodGuard data layer.
- * All values here are SIMULATED DEMO DATA. Replace `demoSource` with an
- * implementation of `FloodDataSource` backed by ESP32 telemetry and an ML
- * forecasting service; the UI only depends on this interface.
+ * FloodGuard data layer — ALL VALUES ARE SIMULATED DEMO DATA.
+ * The UI reads only through `FloodDataSource`; replace `demoSource` with an
+ * implementation backed by real sensors (GSM/LoRaWAN) so pages need no changes.
  */
-export type RiskLevel = "low" | "moderate" | "high" | "severe";
+export type ScenarioId = "normal" | "rise" | "critical";
+export type RiskLevel = "normal" | "attention" | "critical";
 
-export interface Reading { time: string; level: number; temp: number; rain: number }
-export interface Station { id: string; name: string; x: number; y: number; level: number; risk: RiskLevel; type: "station" | "point"; online: boolean }
-export interface Forecast { horizonHours: number; points: { time: string; predicted: number; low: number; high: number }[]; peak: number; probability: number; risk: RiskLevel; factors: { label: string; weight: number }[]; model: string }
-export interface Alert { id: string; time: string; severity: RiskLevel; station: string; message: string }
-export interface Current { level: number; trend: number; temp: number; weather: string; humidity: number; rain24h: number; risk: RiskLevel; updated: string }
+export interface Scenario {
+  id: ScenarioId; button: string; level: number; delta: number; speed: string;
+  status: string; risk: RiskLevel; action: string;
+}
+export interface ObservationPoint { id: string; name: string; lat: number; lng: number; level: number; delta: number; online: boolean; risk: RiskLevel }
+export interface LogEntry { time: string; text: string }
+export interface SeriesPoint { time: string; level: number }
 
 export interface FloodDataSource {
   isDemo: boolean;
-  current(): Current;
-  history(days: number): Reading[];
-  forecast(): Forecast;
-  stations(): Station[];
-  alerts(): Alert[];
+  scenario(id: ScenarioId): Scenario;
+  series(id: ScenarioId): SeriesPoint[];
+  points(id: ScenarioId): ObservationPoint[];
+  log(id: ScenarioId): LogEntry[];
 }
 
-export const THRESHOLDS = { moderate: 2.2, high: 2.8, severe: 3.4 }; // metres
-export const riskFor = (l: number): RiskLevel =>
-  l >= THRESHOLDS.severe ? "severe" : l >= THRESHOLDS.high ? "high" : l >= THRESHOLDS.moderate ? "moderate" : "low";
+/** Conditional demo thresholds, cm. Must be agreed with Kazhydromet / emergency services. */
+export const THRESHOLDS = { normal: 200, warning: 230, critical: 300 };
+export const UPDATED = "20:30";
+export const CENTER: [number, number] = [50.115, 73.17];
 
-// deterministic pseudo-random so SSR and client match
-const rand = (i: number) => { const x = Math.sin(i * 12.9898) * 43758.5453; return x - Math.floor(x); };
-const BASE = new Date("2026-11-09T16:00:00Z").getTime();
-const H = 3600_000;
+export const ACK_TEXT = "Оператор подтвердил получение предупреждения";
 
-const hourly: Reading[] = Array.from({ length: 24 * 30 }, (_, k) => {
-  const i = 24 * 30 - 1 - k;
-  const t = BASE - i * H;
-  const day = k / 24;
-  const level = 1.4 + 0.35 * Math.sin(day / 4) + (day > 26 ? (day - 26) * 0.22 : 0) + rand(k) * 0.08 + 0.05 * Math.sin(k / 3.8);
-  return { time: new Date(t).toISOString(), level: +level.toFixed(2), temp: +(6 + 5 * Math.sin((k % 24) / 24 * Math.PI * 2 - 1.6) + rand(k + 7) * 1.5).toFixed(1), rain: +(day > 25 ? rand(k + 3) * 4 : rand(k + 3) > 0.85 ? rand(k) * 2 : 0).toFixed(1) };
-});
+const SCENARIOS: Record<ScenarioId, Scenario> = {
+  normal: { id: "normal", button: "Нормальный уровень", level: 178, delta: 1, speed: "низкая", status: "Нормальная ситуация", risk: "normal", action: "Продолжить плановое наблюдение" },
+  rise: { id: "rise", button: "Быстрый подъём", level: 236, delta: 12, speed: "повышенная", status: "Повышенное внимание", risk: "attention", action: "Требуется проверка участка ответственным специалистом" },
+  critical: { id: "critical", button: "Критическая ситуация", level: 318, delta: 28, speed: "высокая", status: "Критическая ситуация", risk: "critical", action: "Необходимо проверить участок и применить утверждённый план реагирования" },
+};
+
+const LOGS: Record<ScenarioId, LogEntry[]> = {
+  normal: [
+    { time: "20:10", text: "Система получила новое демонстрационное значение" },
+    { time: "20:25", text: "Изменение уровня остаётся в нормальном диапазоне" },
+    { time: "20:30", text: "Все точки наблюдения доступны" },
+  ],
+  rise: [
+    { time: "20:10", text: "Зафиксировано ускорение подъёма воды" },
+    { time: "20:18", text: "Превышен демонстрационный предупредительный порог" },
+    { time: "20:19", text: "Сформировано уведомление ответственному сотруднику" },
+  ],
+  critical: [
+    { time: "20:10", text: "Зафиксирован быстрый рост на нескольких точках" },
+    { time: "20:14", text: "Превышен демонстрационный критический порог" },
+    { time: "20:15", text: "Отправлено повторное предупреждение" },
+    { time: "20:17", text: "Ожидается подтверждение оператора" },
+  ],
+};
+
+const BASE_POINTS = [
+  { id: "P1", name: "Гидропост на реке Нура", lat: 50.122, lng: 73.155, k: 1 },
+  { id: "P2", name: "Мост через Нуру", lat: 50.112, lng: 73.178, k: 0.93 },
+  { id: "P3", name: "Локальный сток A", lat: 50.124, lng: 73.192, k: 0.62 },
+  { id: "P4", name: "Локальный сток B", lat: 50.104, lng: 73.16, k: 0.55 },
+];
+
+export const riskForLevel = (cm: number): RiskLevel =>
+  cm >= THRESHOLDS.critical ? "critical" : cm >= THRESHOLDS.warning ? "attention" : "normal";
 
 export const demoSource: FloodDataSource = {
   isDemo: true,
-  current() {
-    const last = hourly[hourly.length - 1]!, prev = hourly[hourly.length - 7]!;
-    return { level: last.level, trend: +((last.level - prev.level) / 6 * 100).toFixed(1), temp: last.temp, weather: "Light rain", humidity: 86, rain24h: +hourly.slice(-24).reduce((a, r) => a + r.rain, 0).toFixed(1), risk: riskFor(last.level), updated: last.time };
-  },
-  history(days) { return hourly.slice(-24 * days); },
-  forecast() {
-    const last = hourly[hourly.length - 1]!.level;
-    const points = Array.from({ length: 49 }, (_, h) => {
-      const p = last + 0.9 * (1 - Math.exp(-h / 14)) - (h > 30 ? (h - 30) * 0.012 : 0);
-      const u = 0.05 + h * 0.006;
-      return { time: new Date(BASE + h * H).toISOString(), predicted: +p.toFixed(2), low: +(p - u).toFixed(2), high: +(p + u).toFixed(2) };
+  scenario: (id) => SCENARIOS[id],
+  series(id) {
+    const s = SCENARIOS[id];
+    return Array.from({ length: 13 }, (_, i) => {
+      const hoursAgo = 12 - i;
+      const curve = id === "normal" ? hoursAgo * s.delta * 0.8 : id === "rise" ? hoursAgo * 6 + (hoursAgo < 4 ? 0 : (hoursAgo - 4) * 0.5) : (hoursAgo ** 1.6) * 5.6;
+      const h = String((20 - hoursAgo + 24) % 24).padStart(2, "0");
+      return { time: `${h}:30`, level: Math.round(s.level - curve) };
     });
-    const peak = Math.max(...points.map((p) => p.predicted));
-    return { horizonHours: 48, points, peak, probability: 68, risk: riskFor(peak), model: "Demo heuristic (placeholder for ML model)", factors: [
-      { label: "Upstream rainfall (last 72h)", weight: 42 },
-      { label: "Rising level trend", weight: 27 },
-      { label: "Soil saturation estimate", weight: 18 },
-      { label: "Snowmelt / temperature", weight: 13 },
-    ] };
   },
-  stations() {
-    return [
-      { id: "ST-01", name: "Upper Ford Station", x: 14, y: 22, level: 2.31, risk: "moderate", type: "station", online: true },
-      { id: "ST-02", name: "Mill Bridge Station", x: 44, y: 46, level: 2.62, risk: "moderate", type: "station", online: true },
-      { id: "ST-03", name: "Village Weir Station", x: 76, y: 64, level: 2.95, risk: "high", type: "station", online: true },
-      { id: "MP-04", name: "Tributary Point A", x: 30, y: 70, level: 1.8, risk: "low", type: "point", online: true },
-      { id: "MP-05", name: "Floodplain Point B", x: 62, y: 30, level: 2.1, risk: "low", type: "point", online: false },
-      { id: "MP-06", name: "Lower Meadow Point", x: 90, y: 82, level: 3.05, risk: "high", type: "point", online: true },
-    ];
+  points(id) {
+    const s = SCENARIOS[id];
+    return BASE_POINTS.map((p) => {
+      const level = Math.round(s.level * p.k);
+      // Local runoff points follow scenario risk; river points by level.
+      const risk = p.k < 0.7 ? s.risk : riskForLevel(level) === "normal" && s.risk !== "normal" ? "attention" : riskForLevel(level);
+      return { id: p.id, name: p.name, lat: p.lat, lng: p.lng, level, delta: Math.max(1, Math.round(s.delta * p.k)), online: true, risk };
+    });
   },
-  alerts() {
-    const a: [number, RiskLevel, string, string][] = [
-      [1, "high", "Village Weir Station", "Water level exceeded 2.8 m high-risk threshold"],
-      [5, "moderate", "Mill Bridge Station", "Rapid rise detected: +12 cm/h"],
-      [9, "moderate", "Upper Ford Station", "Level above 2.2 m watch threshold"],
-      [20, "low", "Floodplain Point B", "Sensor offline — no data for 30 min"],
-      [46, "moderate", "System", "Heavy rainfall forecast upstream (demo)"],
-      [120, "low", "Village Weir Station", "Level returned to normal range"],
-      [190, "severe", "Lower Meadow Point", "Severe level 3.4 m — evacuation advisory (drill)"],
-      [300, "low", "System", "Monthly sensor calibration completed"],
-    ];
-    return a.map(([h, severity, station, message], i) => ({ id: `AL-${100 + i}`, time: new Date(BASE - h * H).toISOString(), severity, station, message }));
-  },
+  log: (id) => LOGS[id],
 };
 
 export const data: FloodDataSource = demoSource;
 
-export const fmtTime = (iso: string) => new Date(iso).toLocaleString("en-GB", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit", timeZone: "UTC" }) + " UTC";
+export const riskColor: Record<RiskLevel, string> = { normal: "var(--safe)", attention: "var(--caution)", critical: "var(--destructive)" };
