@@ -193,6 +193,7 @@ function Page() {
         </DialogContent>
       </Dialog>
     </div>
+    </div>
   );
 }
 
