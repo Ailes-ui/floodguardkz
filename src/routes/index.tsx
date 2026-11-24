@@ -47,8 +47,7 @@ function Page() {
   const choose = (next: ScenarioId) => { setId(next); setAcked(false); setToast(next !== "normal"); };
 
   return (
-    <p style="font-family: Geneva, Helvetica, sans-serif;">
-    <div className="min-h-screen">
+    <div className="min-h-screen font-[Geneva,Helvetica,sans-serif]">
       <header className="sticky top-0 z-[1000] border-b border-border bg-background/90 backdrop-blur">
         <div className="mx-auto flex max-w-7xl flex-wrap items-center gap-3 px-4 py-3">
           <div className="flex items-center gap-2.5">
@@ -65,7 +64,6 @@ function Page() {
           <TriangleAlert className="mr-1.5 inline size-3.5" />Демонстрационный MVP. Все показатели смоделированы. Реальные датчики пока не установлены. Официальные пороги должны согласовываться с Казгидрометом и ДЧС.
         </div>
       </header>
-    </p>
 
       {toast && (
         <div className="fixed right-4 top-44 z-[1100] w-80 animate-in slide-in-from-right fade-in rounded-xl border border-border bg-popover p-4 shadow-2xl">
@@ -268,6 +266,5 @@ function Roadmap() {
         {steps.map((st, i) => <li key={st} className="flex gap-3 rounded-lg border border-border bg-secondary p-4 text-sm"><span className="grid size-7 shrink-0 place-items-center rounded-full bg-primary font-mono text-xs font-semibold text-primary-foreground">{i + 1}</span>{st}</li>)}
       </ol>
     </section>
-    </p>
   );
 }
