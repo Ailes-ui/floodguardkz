@@ -25,7 +25,7 @@ export interface FloodDataSource {
 /** Conditional demo thresholds, cm. Must be agreed with Kazhydromet / emergency services. */
 export const THRESHOLDS = { normal: 200, warning: 230, critical: 300 };
 export const UPDATED = "20:30";
-export const CENTER: [number, number] = [50.115, 73.17];
+export const CENTER: [number, number] = [50.107, 73.14];
 
 export const ACK_TEXT = "Оператор подтвердил получение предупреждения";
 
@@ -54,11 +54,12 @@ const LOGS: Record<ScenarioId, LogEntry[]> = {
   ],
 };
 
+// Coordinates follow the real Nura riverbed (OpenStreetMap) so demo markers sit on water.
 const BASE_POINTS = [
-  { id: "P1", name: "Гидропост на реке Нура", lat: 50.122, lng: 73.155, k: 1 },
-  { id: "P2", name: "Мост через Нуру", lat: 50.112, lng: 73.178, k: 0.93 },
-  { id: "P3", name: "Локальный сток A", lat: 50.124, lng: 73.192, k: 0.62 },
-  { id: "P4", name: "Локальный сток B", lat: 50.104, lng: 73.16, k: 0.55 },
+  { id: "P1", name: "Гидропост на реке Нура", lat: 50.1075, lng: 73.1559, k: 1 },
+  { id: "P2", name: "Мост через Нуру", lat: 50.1016, lng: 73.1713, k: 0.93 },
+  { id: "P3", name: "Локальный сток A", lat: 50.112, lng: 73.1455, k: 0.62 },
+  { id: "P4", name: "Локальный сток B", lat: 50.1058, lng: 73.1124, k: 0.55 },
 ];
 
 export const riskForLevel = (cm: number): RiskLevel =>
