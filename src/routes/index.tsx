@@ -27,6 +27,7 @@ import { ACK_TEXT, data, riskColor, THRESHOLDS, UPDATED, type RiskLevel, type Sc
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
+import { Assistant } from "@/components/floodguard/Assistant";
 
 const MapView = lazy(() => import("@/components/floodguard/MapView"));
 
@@ -346,6 +347,7 @@ function Page() {
           <About />
           <Roadmap />
         </main>
+        <Assistant />
 
         <footer className="border-t border-border px-4 py-6 text-center text-xs text-muted-foreground">
           <p className="font-medium text-foreground">FloodGuard MVP 0.1 — проектная версия</p>
