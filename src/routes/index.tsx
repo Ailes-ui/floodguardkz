@@ -65,6 +65,7 @@ function Page() {
           <TriangleAlert className="mr-1.5 inline size-3.5" />Демонстрационный MVP. Все показатели смоделированы. Реальные датчики пока не установлены. Официальные пороги должны согласовываться с Казгидрометом и ДЧС.
         </div>
       </header>
+    </p>
 
       {toast && (
         <div className="fixed right-4 top-44 z-[1100] w-80 animate-in slide-in-from-right fade-in rounded-xl border border-border bg-popover p-4 shadow-2xl">
